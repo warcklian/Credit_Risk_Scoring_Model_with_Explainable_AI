@@ -3,20 +3,20 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Tamaño límite de GitHub por archivo
 LIMIT_MB = 100
 WARN_MB = 50
 
-# Rutas a ignorar
 IGNORED_FOLDERS = ["data", "reports", "models", "__pycache__"]
 IGNORED_EXTS = [".csv", ".pkl", ".pyc", ".log"]
 
-def run(command):
+def run(command, exit_on_error=False):
     try:
-        result = subprocess.run(command, check=True, shell=True, capture_output=True, text=True)
+        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] Comando fallido: {command}\n{e.stderr}")
+        print(f"[ERROR] Comando fallido: {command}\n{e.stderr.strip()}")
+        if exit_on_error:
+            sys.exit(1)
         return None
 
 def is_git_repo():
@@ -49,6 +49,19 @@ def remove_large_files():
                 print(f"[WARN] {file_path} - {size_mb:.2f} MB (supera {WARN_MB} MB pero aceptado)")
     return deleted
 
+def clean_git_history():
+    print("\n⚠ Detected large files rejected by GitHub.")
+    user_input = input("¿Quieres eliminar archivos grandes del historial y forzar el push? (s/n): ").strip().lower()
+    if user_input != "s":
+        print("⛔ Abortado por el usuario. No se forzó el push.")
+        return
+
+    print("\n🧹 Ejecutando limpieza de historial con filter-branch...")
+    run('git filter-branch --force --index-filter "git rm --cached --ignore-unmatch -r data reports models" --prune-empty --tag-name-filter cat -- --all', exit_on_error=True)
+    print("\n🚀 Forzando push limpio a GitHub...")
+    run("git push origin --force --all", exit_on_error=True)
+    print("✅ Push forzado completo. El historial ahora está limpio.")
+
 def git_sync():
     if not is_git_repo():
         print("[ERROR] No es un repositorio Git.")
@@ -59,20 +72,22 @@ def git_sync():
     create_gitignore()
     run("git add .gitignore")
 
-    print("[INFO] Haciendo pull remoto...")
     run("git pull origin main")
 
     removed = remove_large_files()
 
-    print("[INFO] Agregando cambios...")
     run("git add .")
     run("git commit -m \"Sincronización automática: limpieza y subida\"")
-    print("[INFO] Haciendo push...")
-    run("git push origin main")
 
-    print("\n SINCRONIZACIÓN COMPLETA")
+    print("[INFO] Haciendo push...")
+    push_result = run("git push origin main")
+
+    if push_result is None and any(x in removed for x in ["data", "reports"]):
+        clean_git_history()
+
+    print("\n✅ SINCRONIZACIÓN FINALIZADA")
     if removed:
-        print("\n Archivos grandes ignorados o eliminados del tracking:")
+        print("\n📄 Archivos grandes ignorados del push normal:")
         for f in removed:
             print(f"   - {f}")
 
