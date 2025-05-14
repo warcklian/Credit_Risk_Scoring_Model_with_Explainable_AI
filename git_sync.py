@@ -82,8 +82,10 @@ def git_sync():
     print("[INFO] Haciendo push...")
     push_result = run("git push origin main")
 
-    if push_result is None and any(x in removed for x in ["data", "reports"]):
+    if push_result is None:
+        print("\n[INFO] El push ha fallado. Intentando detectar conflicto por archivos grandes...")
         clean_git_history()
+
 
     print("\n SINCRONIZACIÓN FINALIZADA")
     if removed:
