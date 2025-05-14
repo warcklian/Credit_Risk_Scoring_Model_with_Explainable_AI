@@ -104,5 +104,3 @@ Este proyecto está licenciado bajo MIT.
 - ✅ Lista de librerías y comandos reproducibles.
 
 ---
-
-¿Te gustaría que lo convierta también a PDF o te ayude a incluirlo en tu release como documentación lista para descargar?
