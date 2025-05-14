@@ -2,6 +2,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 LIMIT_MB = 100
 WARN_MB = 50
