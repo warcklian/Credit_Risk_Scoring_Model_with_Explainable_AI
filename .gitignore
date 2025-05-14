@@ -1,0 +1,6 @@
+data/
+reports/
+models/
+__pycache__/
+*.pyc
+*.pkl
