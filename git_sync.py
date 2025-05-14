@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-import sys
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 LIMIT_MB = 100
@@ -51,18 +51,12 @@ def remove_large_files():
                 print(f"[WARN] {file_path} - {size_mb:.2f} MB (supera {WARN_MB} MB pero aceptado)")
     return deleted
 
-def clean_git_history():
-    print("\n⚠ Detected large files rejected by GitHub.")
-    user_input = input("¿Quieres eliminar archivos grandes del historial y forzar el push? (s/n): ").strip().lower()
-    if user_input != "s":
-        print(" Abortado por el usuario. No se forzó el push.")
-        return
-
-    print("\n Ejecutando limpieza de historial con filter-branch...")
+def clean_git_history_auto():
+    print("[INFO] Limpiando historial Git por archivos grandes...")
     run('git filter-branch --force --index-filter "git rm --cached --ignore-unmatch -r data reports models" --prune-empty --tag-name-filter cat -- --all', exit_on_error=True)
-    print("\n Forzando push limpio a GitHub...")
+    print("[INFO] Push forzado sin preguntar...")
     run("git push origin --force --all", exit_on_error=True)
-    print(" Push forzado completo. El historial ahora está limpio.")
+    print("[OK] Push forzado completo. Historial limpio.")
 
 def git_sync():
     if not is_git_repo():
@@ -79,19 +73,18 @@ def git_sync():
     removed = remove_large_files()
 
     run("git add .")
-    run("git commit -m \"Sincronización automática: limpieza y subida\"")
+    run("git commit -m \"Sincronizacion automatica: limpieza y subida\"")
 
     print("[INFO] Haciendo push...")
     push_result = run("git push origin main")
 
     if push_result is None:
-        print("\n[INFO] El push ha fallado. Intentando detectar conflicto por archivos grandes...")
-        clean_git_history()
+        print("[INFO] Push fallido. Se asume conflicto por archivos grandes. Ejecutando limpieza automatica...")
+        clean_git_history_auto()
 
-
-    print("\n SINCRONIZACIÓN FINALIZADA")
+    print("[OK] Sincronizacion finalizada.")
     if removed:
-        print("\n Archivos grandes ignorados del push normal:")
+        print("[INFO] Archivos grandes ignorados del push normal:")
         for f in removed:
             print(f"   - {f}")
 
