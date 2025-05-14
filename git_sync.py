@@ -53,14 +53,14 @@ def clean_git_history():
     print("\n⚠ Detected large files rejected by GitHub.")
     user_input = input("¿Quieres eliminar archivos grandes del historial y forzar el push? (s/n): ").strip().lower()
     if user_input != "s":
-        print("⛔ Abortado por el usuario. No se forzó el push.")
+        print(" Abortado por el usuario. No se forzó el push.")
         return
 
-    print("\n🧹 Ejecutando limpieza de historial con filter-branch...")
+    print("\n Ejecutando limpieza de historial con filter-branch...")
     run('git filter-branch --force --index-filter "git rm --cached --ignore-unmatch -r data reports models" --prune-empty --tag-name-filter cat -- --all', exit_on_error=True)
-    print("\n🚀 Forzando push limpio a GitHub...")
+    print("\n Forzando push limpio a GitHub...")
     run("git push origin --force --all", exit_on_error=True)
-    print("✅ Push forzado completo. El historial ahora está limpio.")
+    print(" Push forzado completo. El historial ahora está limpio.")
 
 def git_sync():
     if not is_git_repo():
@@ -85,9 +85,9 @@ def git_sync():
     if push_result is None and any(x in removed for x in ["data", "reports"]):
         clean_git_history()
 
-    print("\n✅ SINCRONIZACIÓN FINALIZADA")
+    print("\n SINCRONIZACIÓN FINALIZADA")
     if removed:
-        print("\n📄 Archivos grandes ignorados del push normal:")
+        print("\n Archivos grandes ignorados del push normal:")
         for f in removed:
             print(f"   - {f}")
 
