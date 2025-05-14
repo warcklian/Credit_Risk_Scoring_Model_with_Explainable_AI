@@ -14,7 +14,7 @@ import numpy as np
 import os
 
 # ---------------- CONFIGURACIÓN ----------------
-n_samples = 500000
+n_samples = 10000
 output_file = "data/credit_data.csv"
 # ------------------------------------------------
 
